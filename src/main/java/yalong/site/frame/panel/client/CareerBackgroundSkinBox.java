@@ -18,7 +18,7 @@ import java.util.List;
  * @author chengshuangxiong
  */
 @Slf4j
-public class CareerBackgroundSkinBox extends BaseComboBox<ItemBO> {
+public class  CareerBackgroundSkinBox extends BaseComboBox<ItemBO> {
 	private final CareerBackgroundSkinBox box;
 
 	public CareerBackgroundSkinBox() {

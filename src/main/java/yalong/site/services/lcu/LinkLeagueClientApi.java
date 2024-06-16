@@ -188,6 +188,20 @@ public class LinkLeagueClientApi {
 	}
 
 	/**
+	 * 重置Lcu客户端
+	 */
+	public String resetUxClient() throws IOException {
+		return requestLcuUtil.doPost("/riotclient/kill-and-restart-ux", "");
+	}
+
+	/**
+	 * 重置Lcu客户端
+	 */
+	public String setPlayAgain() throws IOException {
+		return requestLcuUtil.doPost("/lol-lobby/v2/play-again", "");
+	}
+
+	/**
 	 * 获取所有英雄
 	 */
 	public ArrayList<ChampionBO> getAllChampion() throws IOException {

@@ -42,6 +42,8 @@ public class ClientPanel extends BasePanel {
 		list.add(new PickBox());
 		list.add(new HistoryButton());
 
+		list.add(new ResetClientCheckBox());
+		list.add(new ResetPlayAgain());
 		return list;
 	}
 

@@ -107,8 +107,8 @@ public class CalculateScore {
 			firstEntry = treeMap.firstEntry();
 		}
 
-		ArrayList<String> stupidList = entry2String(firstEntry, "傻鸟");
-		ArrayList<String> smartList = entry2String(lastEntry, "大神");
+		ArrayList<String> stupidList = entry2String(firstEntry, "下等马");
+		ArrayList<String> smartList = entry2String(lastEntry, "上等马");
 		result.addAll(stupidList);
 		result.addAll(smartList);
 		return result;
