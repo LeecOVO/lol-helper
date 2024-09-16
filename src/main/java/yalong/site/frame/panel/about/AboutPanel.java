@@ -22,7 +22,8 @@ public class AboutPanel extends BasePanel {
 		textArea.setText(
 				"本软件永久免费\n"
 						+ "加入qq群获取最新版本\n"
-						+ "qq群号:882050965\n"
+						+ "qq群号:882050965(已满加入2群)\n"
+						+ "qq2群号:1001245686"
 						+ "\n"
 						+ "LeeCOVO 修改\n"
 						+ "原项目地址：https://github.com/4379711/lol-helper\n"

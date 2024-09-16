@@ -16,9 +16,8 @@ import java.awt.*;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -93,15 +92,15 @@ public class LinkLeagueClientApi {
 	/**
 	 * 生涯设置背景皮肤
 	 *
-	 * @param skinId 皮肤id,长度5位
-	 *               比如:其中 13006，这个ID分为两部分 13 和 006,
-	 *               13是英雄id,6是皮肤id(不足3位,前面补0)
+	 * @param body 皮肤数据
 	 */
-	public void setBackgroundSkin(int skinId) throws IOException {
-		JSONObject body = new JSONObject(1);
-		body.put("key", "backgroundSkinId");
-		body.put("value", skinId);
-		requestLcuUtil.doPost("/lol-summoner/v1/current-summoner/summoner-profile", body.toJSONString());
+	public void setBackgroundSkin(String body) throws IOException {
+//		JSONObject body = new JSONObject(2);
+//		body.put("key", "backgroundSkinId");
+//		body.put("value", skinId)
+// 		增强皮肤(带签名),参数用这个,分两次调用
+//		body.put("key", "backgroundSkinAugments");
+		requestLcuUtil.doPost("/lol-summoner/v1/current-summoner/summoner-profile", body);
 	}
 
 	/**
@@ -174,12 +173,38 @@ public class LinkLeagueClientApi {
 			Integer id = jsonObject.getInteger("id");
 			String name = jsonObject.getString("name");
 			arrayList.add(new SkinBO(id, name));
+			//有签名的皮肤
+			JSONObject questSkinInfo = jsonObject.getJSONObject("questSkinInfo");
+			if(questSkinInfo!=null){
+				JSONArray tiers = questSkinInfo.getJSONArray("tiers");
+				if(tiers!=null){
+					for (int k = 0; k < tiers.size(); k++) {
+						JSONObject jsonObject_ = tiers.getJSONObject(k);
+						Integer id_ = jsonObject_.getInteger("id");
+						String name_ = jsonObject_.getString("name");
+						//加强版皮肤
+						JSONObject skinAugments = jsonObject_.getJSONObject("skinAugments");
+						if(skinAugments!=null){
+							JSONArray augments = skinAugments.getJSONArray("augments");
+							if (augments!=null){
+								for (int l = 0; l < augments.size(); l++) {
+                                    String contentId = augments.getJSONObject(l).getString("contentId");
+                                    arrayList.add(new SkinBO(id_, name_,contentId));
+                                }
+							}
+						}else {
+                            arrayList.add(new SkinBO(id_, name_));
+                        }
+
+					}
+				}
+			}
 		}
 		return arrayList.stream().distinct().collect(Collectors.toList());
 	}
 
 	/**
-	 * 设置生涯背景
+	 * 设置炫彩皮肤
 	 */
 	public String setCurrentChampionSkins(int skinId) throws IOException {
 		JSONObject body = new JSONObject(3);
@@ -230,7 +255,8 @@ public class LinkLeagueClientApi {
 	 * 英雄选择界面信息
 	 */
 	public String getChampSelectInfo() throws IOException {
-		return requestLcuUtil.doGet("/lol-champ-select/v1/session");
+		String s = requestLcuUtil.doGet("/lol-champ-select/v1/session");
+		return s;
 	}
 
 	/**
@@ -477,5 +503,75 @@ public class LinkLeagueClientApi {
 		JSONObject jsonObject = JSON.parseObject(resp);
 		return JSON.parseObject(jsonObject.get("styles").toString(), new TypeReference<ArrayList<PerkStyleBO>>() {
 		});
+	}
+
+	/**
+	 * 获取玩家头像
+	 *
+	 * @param profileIconId 头像ID
+	 */
+	public Image getProfileIcon(Integer profileIconId) throws IOException {
+		String endpoint = "/lol-game-data/assets/v1/profile-icons/" + profileIconId + ".jpg ";
+		String url;
+		url = endpoint.substring(1);
+		boolean exist = FileUtil.exist(new File(url));
+		if (exist) {
+			return ImageIO.read(FileUtil.getInputStream(new File(url)));
+		} else {
+			File file = FileUtil.writeBytes(requestLcuUtil.download(endpoint), new File(url));
+			return ImageIO.read(FileUtil.getInputStream(file));
+		}
+	}
+
+	/**
+	 * 获取SGP接口accessToken
+	 */
+	public String getSgpAccessToken() throws IOException {
+		String endpoint = "/entitlements/v1/token";
+		String resp = requestLcuUtil.doGet(endpoint);
+		return JSON.parseObject(resp).get("accessToken").toString();
+
+	}
+
+	/**
+	 * 获取全部模式地图信息
+	 */
+	public Map<Integer, GameQueue> getAllQueue() throws IOException {
+		String endpoint = "/lol-game-queues/v1/queues";
+		String resp = requestLcuUtil.doGet(endpoint);
+		ArrayList<GameQueue> gameQueues = JSON.parseObject(resp, new TypeReference<ArrayList<GameQueue>>() {
+		});
+		Map<Integer, GameQueue> data = new HashMap<>();
+		for (GameQueue gameQueue : gameQueues) {
+			if (!gameQueue.getGameMode().equals("TFT")) {
+				data.put(gameQueue.getId(), gameQueue);
+			}
+		}
+		//添加自定义
+		GameQueue gameQueue = new GameQueue();
+		gameQueue.setId(0);
+		gameQueue.setName("自定义");
+		gameQueue.setGameMode("CUSTOM");
+		gameQueue.setIsVisible("true");
+		data.put(0, gameQueue);
+		LinkedHashMap<Integer, GameQueue> sortedMap = data.entrySet().stream()
+				.sorted(Map.Entry.comparingByKey())
+				.collect(
+						Collectors.toMap(
+								Map.Entry<Integer, GameQueue>::getKey,
+								Map.Entry<Integer, GameQueue>::getValue,
+								(oldVal, newVal) -> oldVal,
+								LinkedHashMap<Integer, GameQueue>::new
+						)
+				);
+		return sortedMap;
+	}
+
+	/**
+	 * 获取游戏模式加描述资源
+	 */
+	public String getMaps() throws IOException {
+		String endpoint = "/lol-maps/v1/maps";
+		return requestLcuUtil.doGet(endpoint);
 	}
 }

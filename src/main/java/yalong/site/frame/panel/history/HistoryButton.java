@@ -1,4 +1,4 @@
-package yalong.site.frame.panel.client;
+package yalong.site.frame.panel.history;
 
 import lombok.extern.slf4j.Slf4j;
 import yalong.site.bo.ProductsMatchHistoryBO;
@@ -28,7 +28,6 @@ public class HistoryButton extends BaseButton {
 		return new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				GameDataCache.cacheLcuAll();
 				if (FrameInnerCache.matchPanel == null && FrameInnerCache.matchFrame == null) {
 					JFrame jFrame = new JFrame("战绩查询");
 					FrameInnerCache.matchFrame = jFrame;
@@ -44,6 +43,7 @@ public class HistoryButton extends BaseButton {
 					if (GameDataCache.me != null) {
 						try {
 							ProductsMatchHistoryBO pmh = AppCache.api.getProductsMatchHistoryByPuuid(GameDataCache.me.getPuuid(), 0, FrameSetting.PAGE_SIZE - 1);
+							matchPanel.resetIndex();
 							matchPanel.setData(pmh, GameDataCache.me.getPuuid());
 						} catch (IOException ex) {
 							throw new RuntimeException(ex);
